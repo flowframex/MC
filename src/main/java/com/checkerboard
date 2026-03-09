@@ -1,0 +1,44 @@
+package com.checkerboard;
+
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Entry point for the Checkerboard Rendering mod.
+ *
+ * HOW IT WORKS:
+ * - Every frame, Minecraft renders to a framebuffer (basically a texture of your screen).
+ * - This mod intercepts that process using a Mixin (a code injection tool).
+ * - After rendering, a GLSL shader runs and blends the current frame with the
+ *   PREVIOUS frame in a checkerboard pattern:
+ *
+ *     Frame 0:  X . X . X .     Frame 1:  . X . X . X
+ *               . X . X . X               X . X . X .
+ *               X . X . X .               . X . X . X
+ *
+ *   X = pixels from this frame
+ *   . = pixels kept from last frame
+ *
+ * - The result looks nearly identical at full speed, but only ~half the pixels
+ *   are "fresh" per frame — similar to techniques used in console upscaling (e.g. PS4 Pro).
+ *
+ * PERFORMANCE NOTE:
+ * True checkerboard rendering skips pixel shading on the GPU for the "." pixels above.
+ * This implementation does the full render first, then discards half — so the main
+ * performance gain here is bandwidth/blending. For deeper GPU-level skipping you'd
+ * need to hook into the draw calls themselves (much more advanced).
+ */
+@Environment(EnvType.CLIENT)
+public class CheckerboardMod implements ClientModInitializer {
+
+    public static final String MOD_ID = "checkerboard";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    @Override
+    public void onInitializeClient() {
+        LOGGER.info("[CheckerboardMod] Initialized! Checkerboard rendering is active.");
+    }
+}
